@@ -131,7 +131,7 @@ export class Connection {
 
     /**
      * Gets a sql.js specific Entity Manager that allows to perform special load and save operations
-     * 
+     *
      * Available only in connection with the sqljs driver.
      */
     get sqljsManager(): SqljsEntityManager {
@@ -259,13 +259,13 @@ export class Connection {
      * Runs all pending migrations.
      * Can be used only after connection to the database is established.
      */
-    async runMigrations(): Promise<void> {
+    async runMigrations(ignoreTimestampOrder: boolean = false): Promise<void> {
 
         if (!this.isConnected)
             throw new CannotExecuteNotConnectedError(this.name);
 
         const migrationExecutor = new MigrationExecutor(this);
-        await migrationExecutor.executePendingMigrations();
+        await migrationExecutor.executePendingMigrations(ignoreTimestampOrder);
     }
 
     /**
@@ -419,7 +419,7 @@ export class Connection {
 
         return relationMetadata.junctionEntityMetadata;
     }
-    
+
     /**
      * Creates an Entity Manager for the current connection with the help of the EntityManagerFactory.
      */

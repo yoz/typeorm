@@ -20,6 +20,12 @@ export class MigrationRunCommand {
                 default: "default",
                 describe: "Name of the connection on which run a query."
             })
+            .option("ignore-timestamp-order", {
+                alias: "t",
+                boolean: true,
+                default: true,
+                describe: "Whether to allow migrations to be run not in timestamp order."
+            })
             .option("config", {
                 alias: "f",
                 default: "ormconfig",
@@ -42,7 +48,7 @@ export class MigrationRunCommand {
             });
             connection = await createConnection(connectionOptions);
 
-            await connection.runMigrations();
+            await connection.runMigrations(argv["require-timestamp-order"]);
             await connection.close();
 
         } catch (err) {

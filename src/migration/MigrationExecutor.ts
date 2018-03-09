@@ -33,7 +33,7 @@ export class MigrationExecutor {
      * Executes all pending migrations. Pending migrations are migrations that are not yet executed,
      * thus not saved in the database.
      */
-    async executePendingMigrations(): Promise<void> {
+  async executePendingMigrations(ignoreTimestampOrder: boolean = false): Promise<void> {
 
         const queryRunner = this.queryRunner || this.connection.createQueryRunner("master");
 
@@ -57,7 +57,7 @@ export class MigrationExecutor {
                 return false;
 
             // migration is new and not executed. now check if its timestamp is correct
-            if (lastTimeExecutedMigration && migration.timestamp < lastTimeExecutedMigration.timestamp)
+            if (!ignoreTimestampOrder && lastTimeExecutedMigration && migration.timestamp < lastTimeExecutedMigration.timestamp)
                 throw new Error(`New migration found: ${migration.name}, however this migration's timestamp is not valid. Migration's timestamp should not be older then migrations already executed in the database.`);
 
             // every check is passed means that migration was not run yet and we need to run it
@@ -216,6 +216,7 @@ export class MigrationExecutor {
 
     /**
      * Loads all migrations that were executed and saved into the database.
+     * This returns migrations in the order they were run (at least in postgres).
      */
     protected async loadExecutedMigrations(queryRunner: QueryRunner): Promise<Migration[]> {
         const migrationsRaw: ObjectLiteral[] = await this.connection.manager
@@ -247,11 +248,11 @@ export class MigrationExecutor {
     }
 
     /**
-     * Finds the latest migration (sorts by timestamp) in the given array of migrations.
+     * Finds the latest migration in the given array of migrations.
+     * Migrations may not necessarily be run in timestamp order.
      */
     protected getLatestMigration(migrations: Migration[]): Migration|undefined {
-        const sortedMigrations = migrations.map(migration => migration).sort((a, b) => (a.timestamp - b.timestamp) * -1);
-        return sortedMigrations.length > 0 ? sortedMigrations[0] : undefined;
+        return migrations.length > 0 ? migrations[migrations.length - 1] : undefined;
     }
 
     /**
